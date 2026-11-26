@@ -1,0 +1,150 @@
+:root {
+  --bg: #fbf0d9;
+  --surface: #fffaf0;
+  --ink: #3c2d1a;
+  --quiet: #6e5736;
+  --accent: #80520a;
+  --line: #d8c29a;
+  --wash: #f3e4c0;
+  --font-ui: Menlo, "PingFang SC", monospace;
+  --font-display: "Iowan Old Style", "Songti SC", serif;
+  --font-num: "SF Mono", Menlo, monospace;
+  --sidebar: 180px;
+  --radius: 0;
+  --gap: 18px;
+  --pad: 16px;
+  --row: 35px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { background: var(--bg); color: var(--ink); font-family: var(--font-ui); }
+body { margin: 0; font-size: 14px; }
+a { color: inherit; }
+button, select, input { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: wait; opacity: .55; }
+button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.sr-only, .skip:not(:focus) { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.skip:focus { position: fixed; inset: 10px auto auto 10px; padding: 8px 14px; background: var(--surface); z-index: 5; }
+.receipt .shell { min-height: 100svh; display: grid; grid-template-columns: var(--sidebar) minmax(0, 1fr); column-gap: 7px; }
+.receipt .rail { padding: 12px 10px; background: var(--surface); border-inline-end: 1px solid var(--line); position: sticky; inset-block-start: 0; align-self: start; min-height: 100svh; }
+.receipt .mark { display: inline-block; font: 700 15px/1.35 var(--font-num); letter-spacing: 0.074em; color: var(--accent); text-decoration: none; padding: 0 8px; }
+.receipt .role { color: var(--quiet); margin: 11px 8px 36px; line-height: 1.5; }
+.receipt nav { display: grid; gap: 4px; }
+.receipt nav button { border: 0; background: transparent; color: var(--quiet); text-align: start; padding: 10px 11px; border-radius: var(--radius); white-space: nowrap; }
+nav button:hover { background: var(--wash); }
+nav button[aria-pressed=true] { background: var(--wash); color: var(--ink); font-weight: 700; }
+.receipt .source-menu { border-block-start: 1px solid var(--line); margin: 12px 8px 0; padding-block: 10px; }
+.source-menu summary { color: var(--quiet); cursor: pointer; }
+.source-menu label { display: block; margin: 9px 0 5px; }
+.source-menu input { width: 100%; font-size: 12px; }
+.source-menu button { margin-block-start: 8px; }
+.work { min-width: 0; display: flex; flex-direction: column; }
+.receipt .masthead { min-height: 125px; display: flex; align-items: center; justify-content: space-between; gap: 36px; padding: 25px max(20px, 4vw) 20px; }
+.receipt .location { margin: 0 0 5px; color: var(--quiet); font-size: 12px; letter-spacing: 0.070em; }
+h1, h2, h3, p { overflow-wrap: anywhere; }
+.receipt h1 { font: 700 clamp(24px, 3.18vw, 52px)/1.14 var(--font-display); margin: 0; letter-spacing: -0.018em; }
+.receipt .actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.source-label { color: var(--quiet); font-size: 12px; margin-inline-end: 6px; max-width: 17ch; overflow-wrap: anywhere; }
+.ghost, .scenario button { padding: 8px 13px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: var(--radius); }
+.ghost:hover { background: var(--wash); }
+.receipt .work-area { padding: 7px max(20px, 4vw) 36px; flex: 1; }
+.receipt .scenario { background: var(--surface); padding: 10px var(--pad); border: 1px solid var(--line); border-radius: var(--radius); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.receipt .scenario-label { display: grid; gap: 3px; margin-inline-end: auto; }
+.scenario-label span, .scenario > label { color: var(--quiet); font-size: 12px; }
+input, select { border: 1px solid var(--line); border-radius: min(7px, var(--radius)); background: var(--bg); color: var(--ink); min-height: 34px; padding: 6px 9px; }
+.scenario input { width: 66px; font-family: var(--font-num); }
+.scenario button { background: var(--accent); border-color: var(--accent); color: var(--button-text, #fff); font-weight: 700; }
+.receipt .kpis { width: 100%; display: grid; grid-template-columns: 1.31fr repeat(4, minmax(0, 1fr)); margin: var(--gap) 0; gap: 4px; }
+.receipt .kpi { background: var(--surface); padding: 10px 10px; border: 1px solid var(--line); border-radius: var(--radius); min-width: 0; }
+.kpi dt { color: var(--quiet); font-size: 12px; line-height: 1.45; }
+.receipt .kpi dd { margin: 8px 0 0; font: 650 clamp(18px, 2.36vw, 52px)/1 var(--font-num); color: var(--ink); }
+.kpi dd, td, code, output { font-variant-numeric: tabular-nums; }
+.receipt .desk-grid { display: grid; gap: var(--gap); grid-template-columns: minmax(0, 1.07fr) minmax(0, 1fr); align-items: start; }
+.receipt .panel { min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; }
+.presentation { grid-area: visual; }
+.queue { grid-area: queue; }
+.inspector { grid-area: evidence; }
+.receipt .panel-head { padding: var(--pad) var(--pad) 10px; display: flex; justify-content: space-between; align-items: baseline; gap: 7px; }
+.receipt .panel-head h2 { color: var(--ink); margin: 0; font: 680 17px/1.35 var(--font-display); }
+.panel-head > span, .panel-head output, .detail-note { color: var(--quiet); font: 12px/1.55 var(--font-ui); }
+.receipt .plot { min-height: 118px; padding: 7px var(--pad) var(--pad); }
+.plot-canvas { display: block; width: 100%; height: auto; }
+.receipt .filters { padding: 4px var(--pad) 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.filters label { color: var(--quiet); }
+.receipt .filters input { width: min(198px, 100%); }
+.receipt .table-scroll { overflow: auto; max-height: 352px; overscroll-behavior: contain; border-block-start: 1px solid var(--line); }
+.receipt table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: max-content; font-size: 14px; }
+table + table, .rejected { border-block-start: 1px solid var(--line); }
+.receipt th, .receipt td { border-block-end: 1px solid color-mix(in srgb, var(--line) 66%, transparent); padding: 6px 10px; height: var(--row); text-align: start; }
+tr:last-child td { border-bottom: 0; }
+th { position: sticky; top: 0; font-weight: 680; color: var(--quiet); background: var(--surface); z-index: 1; }
+tr:hover td { background: var(--wash); }
+.item-link { border: 0; padding: 4px 1px; background: transparent; color: var(--accent); font-family: var(--font-num); text-decoration: underline; text-underline-offset: 3px; }
+.state { white-space: nowrap; padding: 2px 5px; border: 1px solid var(--line); border-radius: min(4px, var(--radius)); color: var(--quiet); }
+.state[data-state=已分派] { color: var(--accent); border-color: var(--accent); }
+.state[data-state=暂停] { color: var(--hold-color, #ad4a38); border-color: currentColor; }
+.detail-note { margin: 0 var(--pad) 10px; }
+.receipt .record-fields { display: grid; grid-template-columns: max-content minmax(0, 1fr); padding: 7px var(--pad) 10px; gap: 10px 10px; margin: 10px 0 0; }
+.record-fields dt { color: var(--quiet); }
+.record-fields dd { margin: 0; overflow-wrap: anywhere; }
+.empty { color: var(--quiet); margin: 16px var(--pad); }
+.rejected summary { cursor: pointer; padding: 9px var(--pad); }
+.receipt .statusbar { margin: 0 max(20px, 4vw); padding-block: 10px 16px; border-block-start: 1px solid var(--line); display: flex; flex-wrap: wrap; color: var(--quiet); gap: 10px 10px; font-size: 12px; line-height: 1.4; }
+.statusbar > span:first-child { margin-inline-end: auto; }
+.statusbar [data-warning] { color: var(--hold-color, #ad4a38); font-weight: 700; }
+@media (max-width: 880px) {
+    .desk-grid { grid-template-columns: minmax(0, 1fr) !important; grid-template-areas: "visual" "queue" "evidence" !important; }
+    .masthead { align-items: start; }
+    .scenario-label { flex-basis: 100%; }
+}
+@media (max-width: 640px) {
+    .shell { grid-template-columns: minmax(0, 1fr); }
+    .rail { position: static; min-height: 0; border: 0; border-block-end: 1px solid var(--line); padding: 13px 16px 10px; }
+    .mark { padding: 0; }
+    .role { display: inline; margin: 0 0 0 8px; font-size: 11px; }
+    nav { display: flex; overflow: auto; margin-block-start: 8px; }
+    nav button { padding: 7px 9px; }
+    .source-menu { margin: 5px 0 0; padding: 7px 0 0; }
+    .masthead { display: block; min-height: auto; padding: 18px 16px 10px; }
+    .actions { margin-block-start: 13px; }
+    .work-area { padding: 5px 16px 18px; }
+    .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .kpi { padding: 8px 9px; }
+    .scenario { padding: 10px; gap: 7px; }
+    .scenario input { width: 52px; }
+    .statusbar { margin-inline: 16px; }
+}
+.receipt .inner-heading { margin: 14px var(--pad) 5px; letter-spacing: .03em; font-size: 13px; color: var(--quiet); }
+@media (max-width: 640px) {
+    .receipt .shell { grid-template-columns: minmax(0, 1fr); }
+    .receipt .rail { position: static; min-height: 0; padding: 12px 16px 9px; border-inline-end: 0; }
+    .receipt nav { display: flex; }
+    .receipt .masthead { padding: 18px 16px 11px; min-height: auto; }
+    .receipt .work-area { padding: 5px 16px 16px; }
+    .receipt .kpis { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    .receipt .kpi { padding: 8px 9px; }
+    .receipt .filters input { width: 100%; }
+    .receipt .statusbar { margin-inline: 16px; }
+}
+
+
+.receipt .rail { background: #efe0bc; border-inline-end: 1px dashed #bc9e6c; }
+.receipt .mark { color: #563905; }
+.receipt .masthead { padding-bottom: 17px; }
+.receipt .location { font-family: var(--font-ui); color: #806332; }
+.receipt .scenario { background: #f8e8c5; border-style: dashed; }
+.receipt .desk-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); grid-template-areas: "visual evidence" "queue queue"; }
+.receipt .kpis { gap: 0; border-block: 2px dashed var(--line); }
+.receipt .kpi { border: 0; background: transparent; border-inline-end: 1px dotted var(--line); }
+.receipt .presentation { border-style: dashed; box-shadow: 3px 3px 0 #eee1bf; }
+.receipt .coupon { border-block: 2px dotted #c8aa74; padding: 7px 0; }
+.receipt dl.receipt-lines { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin: 5px 0; }
+.receipt .receipt-lines dd { margin: 0; color: var(--accent); font-weight: 700; }
+.receipt .checksum { margin: 10px 0 0; color: #604222; font: 11px/1.5 var(--font-num); overflow-wrap: anywhere; }
+@media print {
+    .receipt .rail, .receipt .scenario, .receipt .actions, .receipt .filters { display: none; }
+    .receipt .shell { display: block; } .receipt .table-scroll { max-height: none; overflow: visible; }
+    .receipt .presentation { box-shadow: none; }
+}

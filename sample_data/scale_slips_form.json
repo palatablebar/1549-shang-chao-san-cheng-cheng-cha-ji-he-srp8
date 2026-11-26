@@ -1,0 +1,24 @@
+{
+  "key": "WT-1101",
+  "cohort": "粮食架",
+  "day": 2,
+  "received": 3,
+  "revision": 1,
+  "result_day": 5,
+  "outcome": 0.0,
+  "observed": true,
+  "form": {
+    "散称签面": {
+      "label_mg": 1496000,
+      "scale_mg": 1400000
+    },
+    "抽秤净毛": {
+      "tare_mg": 84000,
+      "probe_deci_c": 220
+    },
+    "退秤补签": {
+      "scale_bins": 5,
+      "void_mg": 103000
+    }
+  }
+}
