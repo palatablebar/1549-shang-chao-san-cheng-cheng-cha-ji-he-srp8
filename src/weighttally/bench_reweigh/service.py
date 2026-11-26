@@ -4,6 +4,13 @@ from math import exp, isfinite
 
 from .contracts import RuleNotice, Job, Plan, Policy, RISK_CUTOFF
 from .constraints import WorkOrder, apply_bench_reweigh
+from ..basket_backtest.trial import range_state, blocked_summary
+
+
+TRIAL_PAUSE_SUMMARY = '试算可能触发扣皮暂停，需人工判读'
+TRIAL_STRADDLE_SUMMARY = '试算风险跨越复核阈值，需人工判读'
+TRIAL_ABOVE_SUMMARY = '试算最低风险达到本班复核阈值'
+TRIAL_BELOW_SUMMARY = '试算全部低于复核阈值，保留记录并等待下一次巡查'
 
 
 def measures(raw):
@@ -50,6 +57,7 @@ def recommend(assessment, attention, policy):
     cost = expected_load(data)
     if not isfinite(estimate) or not 1 <= cost <= 12:
         raise ValueError('处置量不在有效范围')
+    trial = assessment.trial
     if domain_codes and domain_codes[0].hard:
         state = '暂停'
         reason = domain_codes[0].rule_id
@@ -58,15 +66,31 @@ def recommend(assessment, attention, policy):
         state = '人工判读'
         reason = 'OUT_OF_REFERENCE' if raw.key in attention else 'INSUFFICIENT_CALIBRATION'
         summary = '分布偏移或校准量不足，需核对原始单据'
-    elif domain_codes or estimate >= policy.trigger:
+    elif trial is not None and trial.blocked is not None:
+        state = '人工判读'
+        reason = trial.blocked
+        summary = blocked_summary(trial)
+    elif trial is not None and trial.pause_risk:
+        state = '人工判读'
+        reason = 'TRIAL_PAUSE_RISK'
+        summary = TRIAL_PAUSE_SUMMARY
+    elif domain_codes:
         state = '候选'
-        reason = domain_codes[0].rule_id if domain_codes else 'ABOVE_TRIGGER'
-        summary = domain_codes[0].meaning if domain_codes else '达到本班复核阈值'
+        reason = domain_codes[0].rule_id
+        summary = domain_codes[0].meaning
+    elif trial is not None:
+        state, reason = range_state(trial.lower, trial.upper, policy.trigger)
+        summary = {'TRIAL_ABOVE_TRIGGER': TRIAL_ABOVE_SUMMARY, 'TRIAL_BELOW_TRIGGER': TRIAL_BELOW_SUMMARY}.get(reason, TRIAL_STRADDLE_SUMMARY)
+    elif estimate >= policy.trigger:
+        state = '候选'
+        reason = 'ABOVE_TRIGGER'
+        summary = '达到本班复核阈值'
     else:
         state = '观察'
         reason = 'BELOW_TRIGGER'
         summary = '保留记录并等待下一次巡查'
-    return Job(raw.key, raw.cohort, round(estimate, 4), assessment.lower, assessment.upper, cost,
+    lower, upper = (None, None) if trial is None else (trial.lower, trial.upper)
+    return Job(raw.key, raw.cohort, round(estimate, 4), lower, upper, cost,
                state, reason, summary, round(level, 5), tuple(item.rule_id for item in domain_codes))
 
 

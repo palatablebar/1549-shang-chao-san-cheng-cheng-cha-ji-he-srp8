@@ -7,6 +7,7 @@ from .tare_versions import service as cohort_service
 from .variance_context import service as feature_service
 from .tare_deviation import service as model_service
 from .basket_backtest import service as calibration_service
+from .basket_backtest import trial as trial_service
 from .store_mix import service as monitor_service
 from .bench_reweigh import service as dispatch_service
 from .weigh_journal import service as audit_service
@@ -50,8 +51,9 @@ def stage_at(index, details, records, issues=()):
     return {'key': code, 'title': title, 'summary': details, 'records': list(records), 'errors': list(issues)}
 
 
-def rows_for(plan, scored, vectors):
+def rows_for(plan, scored, vectors, assessments):
     by_key = {item.key: item for item in scored}
+    trials = {item.raw.key: item.trial for item in assessments}
     factor_names = ('相对实称差', '扣皮比', '退秤比', '温漂因子', '分拣格负荷')
     order = []
     for job in plan.jobs:
@@ -61,13 +63,28 @@ def rows_for(plan, scored, vectors):
             driver = ' · '.join(f'{key} {amount:+.2f}' for key, amount in reasons[:2])
         else:
             driver = ' · '.join(f'{amount:+.2f}' for amount in point.contributions)
-        interval = ('–' if job.lower is None else f'{job.lower:.2f}–{job.upper:.2f}')
-        order.append({'key': job.key, 'zone': job.cohort, 'estimate': job.estimate, 'interval': interval,
-                      'state': job.state, 'cost': job.cost, 'reason': job.reason, 'evidence': job.summary,
-                      'drivers': driver, 'missing': len(point.missing), 'hits': list(job.rule_hits),
-                      'measurements': dict(zip(('ticket_g', 'actual_g', 'tare_g', 'temp_c', 'bins', 'return_g'), point.input_values, strict=True)),
-                      'unmeasured': list(point.missing), 'operations': feature_service.business_factors(vectors[job.key])})
+        trial = trials.get(job.key)
+        if trial is not None and trial.blocked is None:
+            interval = f'{trial.lower:.4f}–{trial.upper:.4f}'
+        else:
+            interval = '–' if job.lower is None else f'{job.lower:.2f}–{job.upper:.2f}'
+        row = {'key': job.key, 'zone': job.cohort, 'estimate': job.estimate, 'interval': interval,
+               'state': job.state, 'cost': job.cost, 'reason': job.reason, 'evidence': job.summary,
+               'drivers': driver, 'missing': len(point.missing), 'hits': list(job.rule_hits),
+               'measurements': dict(zip(('ticket_g', 'actual_g', 'tare_g', 'temp_c', 'bins', 'return_g'), point.input_values, strict=True)),
+               'unmeasured': list(point.missing), 'operations': feature_service.business_factors(vectors[job.key])}
+        row['trial_risk'] = trial_evidence(trials.get(job.key))
+        order.append(row)
     return order
+
+
+def trial_evidence(trial):
+    if trial is None:
+        return None
+    if trial.blocked is not None:
+        return {'依据': trial.blocked, '说明': trial_service.blocked_summary(trial)}
+    return {'风险范围': trial_service.range_text(trial), '同档口成套': len(trial.frames),
+            '逐条试算': trial_service.frame_evidence(trial.frames)}
 
 
 def comparison_rows(predictions):
@@ -108,6 +125,30 @@ class ShiftDossier:
         detection = monitor_service.scan_current(baseline,prepared.live,self.feature_stamp.fingerprint)
         return holdout, assignment, detection
 
+    def trialled(self, assessments, vectors, calibration):
+        """为缺测当班单据补上同档口成套试算，口径与线上单条推断一致。"""
+        if not any(item.raw.missing for item in assessments):
+            return assessments
+        evaluate = self._trial_evaluator(calibration)
+        result = []
+        for item in assessments:
+            trial = trial_service.build_trial(vectors[item.raw.key], self.history.train, evaluate)
+            result.append(item if trial is None else replace(item, trial=trial))
+        return tuple(result)
+
+    def _trial_evaluator(self, calibration):
+        def evaluate(vector, filled):
+            normalized, factors, flags = feature_service.numeric_fields(filled, self.feature_stamp)
+            scenario = replace(vector, values=normalized, factors=factors, input_values=filled,
+                               excursions=flags, missing=())
+            prediction = model_service.predict_one(self.forecaster, scenario)
+            checked = calibration_service.check_point(prediction, calibration)
+            notices = dispatch_service.signals(filled, checked.estimate, ())
+            hard = bool(notices) and notices[0].hard
+            return checked.estimate, tuple(flags), tuple(notice.rule_id for notice in notices), hard
+
+        return evaluate
+
     def seal(self, plan, mode):
         return audit_service.close_batch(self.raw_forms,self.accepted,self.history,plan,self.feature_stamp.fingerprint,self.forecaster.name,mode)
 
@@ -118,11 +159,13 @@ def execute(documents, capacity=12, mode='balanced', *, as_of=96):
     if not isinstance(documents,(tuple,list)) or not 1<=len(documents)<=2500:
         raise ValueError('需要 1 至 2500 份可识别单据')
     dossier = ShiftDossier(documents,as_of)
+    intake,windows,state,features,kernel = dossier.accepted,dossier.history,dossier.feature_stamp,dossier.prepared,dossier.forecaster
     fitted_calibration, estimates = dossier.grading()
     evaluated, checked_live, drift = dossier.verification(estimates,fitted_calibration)
+    vectors = {item.key: item for item in features.live}
+    checked_live = dossier.trialled(checked_live, vectors, fitted_calibration)
     allocation = dispatch_service.plan_jobs(checked_live,drift.domain,capacity,mode)
     closed = dossier.seal(allocation,mode)
-    intake,windows,state,features,kernel = dossier.accepted,dossier.history,dossier.feature_stamp,dossier.prepared,dossier.forecaster
     scored = estimates['live']
     performance = calibration_service.performance(evaluated)
     coverage = monitor_service.coverage_by_group(features.calibration,features.live)
@@ -134,8 +177,7 @@ def execute(documents, capacity=12, mode='balanced', *, as_of=96):
         {'label': '暂停及人工判读', 'value': states.get('暂停', 0) + states.get('人工判读', 0)},
         {'label': '额度结余', 'value': allocation.balance},
     ]
-    vectors = {item.key: item for item in features.live}
-    row_list = rows_for(allocation, scored, vectors)
+    row_list = rows_for(allocation, scored, vectors, checked_live)
     operating_rows = dispatch_service.operating_ledger(row_list)
     overtime = calibration_service.boundary_diagnostics(evaluated, 0.6)
     sector = calibration_service.sector_replay(evaluated, 0.6)

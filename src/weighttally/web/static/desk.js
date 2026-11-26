@@ -83,6 +83,19 @@ function renderMeasurements(card, row) {
     const operations = node('dl',undefined,'record-fields');
     for (const [name,value] of row.operations) operations.append(node('dt',name),node('dd',value));
     card.append(node('h3','作业量计算','inner-heading'),operations);
+    if (row.trial_risk) {
+        card.append(node('h3','缺测试算风险范围','inner-heading'));
+        const {逐条试算, ...summary} = row.trial_risk;
+        const brief = node('dl',undefined,'record-fields');
+        Object.entries(summary).forEach(([name,value]) => brief.append(node('dt',name),node('dd',value)));
+        card.append(brief);
+        if (逐条试算?.length) {
+            const frames = node('details',undefined,'rejected');
+            frames.append(node('summary',`同档口成套逐条试算 · ${逐条试算.length} 条`));
+            showTables(frames,逐条试算);
+            card.append(frames);
+        }
+    }
     if (row.joint_experiments.length) {
         const joint = node('details',undefined,'rejected');
         joint.append(node('summary','联动推演'));

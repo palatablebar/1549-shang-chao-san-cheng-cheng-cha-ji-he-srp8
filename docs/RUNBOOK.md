@@ -15,4 +15,4 @@
 docker compose exec -T app python -m weighttally.entry evaluate --input sample_data/scale_slips_sample.json --capacity 9
 ```
 
-在网页筛选单号、作业区或原因，点击结果中的单号查看完整字段与处置证据。下载 JSON 可检视结果、对照原始资料摘要和模型特征版本。
+在网页筛选单号、作业区或原因，点击结果中的单号查看完整字段与处置证据。下载 JSON 可检视结果、对照原始资料摘要和模型特征版本。缺测单在单据详情里展开“缺测试算风险范围”，可逐条回查同档口成套来源与各自估计，并核对去向是按最低达线、全部留观还是跨线人工判读。
